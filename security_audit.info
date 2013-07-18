@@ -1,0 +1,4 @@
+name = Security Audit
+description = Drupal module with security holes to highlight potential problems and how to fix them
+core = 7.x
+package = Other
