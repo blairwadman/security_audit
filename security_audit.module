@@ -3,3 +3,39 @@
  * @file
  * Module file for security audit
  */
+
+/**
+ * Implements hook_menu().
+ *
+ *
+ */
+function security_audit_menu() {
+  $items['security_audit/test'] = array(
+    'title' => 'blogs',
+    'page callback' => 'blog_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_SUGGESTED_ITEM,
+  );
+  $items['security_audit/%'] = array(
+    'title' => 'Welcome',
+    'page callback' => 'security_audit_callback',
+    'page arguments' => array(1),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+  
+}
+
+/**
+ * Callback which displays simple hello message
+ * @param $name
+ * @return string
+ */
+function security_audit_callback($name) {
+  // Security problem: user input is not being sanitised and passed directly to the browser.
+  $output = 'Hello '.$name;
+
+  return $output;
+}
