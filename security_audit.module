@@ -2,11 +2,13 @@
 /**
  * @file
  * Module file for security audit
+ *
+ * This module purposely contains unsafe code for educational purposes.
+ * Never use this module on a production site!
  */
 
 /**
  * Implements hook_menu().
- *
  *
  */
 function security_audit_menu() {
@@ -29,6 +31,22 @@ function security_audit_menu() {
     'page callback' => 'security_audit_node_callback',
     'page arguments' => array(2),
     'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['security_audit/form'] = array(
+    'title' => 'Display a form',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('security_audit_form'),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['security_audit/disable'] = array(
+    'title' => 'Unpublish any content',
+    'access arguments' => array('edit any article content'),
+    'page callback' => 'security_audit_node_unpublish',
+    'page arguments' => array(2),
     'type' => MENU_CALLBACK,
   );
 
@@ -59,4 +77,51 @@ function security_audit_node_callback($nid) {
   $title = db_query("SELECT title FROM node where nid = $nid")->fetchField();
 
   return $title;
+}
+
+
+
+/**
+ * Implements hook_form().
+ *
+ */
+function security_audit_form($form, &$form_state) {
+
+  $form['title'] = array(
+    '#type' => 'textfield',
+    '#title' => 'title',
+    '#required' => TRUE, '#weight' => -5
+  );
+
+
+  $form['buttons']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+
+  return $form;
+
+}
+
+/**
+ * Submit handler for security_audit_form.
+ * @param $form
+ * @param $form_state
+ */
+function security_audit_form_submit($form, &$form_state) {
+  // $form_state['input'] is raw user submitted data that has not been sanitised. Use $form_state['values'] instead
+  drupal_set_message('You have submitted data with the following title ' . $form_state['input']['title']);
+}
+
+/**
+ * Callback to unpublish a node.
+ * @param $nid
+ * @return null|string
+ */
+function security_audit_node_unpublish($nid) {
+  // This is a CSRF and SQL Injection vulnerability.
+  // A user can add an image with src being the path to access this callback. Another user with the correct permissions could execute it.
+  db_query("UPDATE {node} SET status = 0 WHERE nid = $nid");
+  drupal_set_message('Unpublished node with nid: ' . $nid);
+  return t('Node unpublished');
 }
