@@ -12,41 +12,43 @@
  *
  */
 function security_audit_menu() {
-  $items['security_audit/test'] = array(
-    'title' => 'blogs',
-    'page callback' => 'blog_page',
-    'access arguments' => array('access content'),
-    'type' => MENU_SUGGESTED_ITEM,
-  );
-  $items['security_audit/welcome/%'] = array(
+  $items['security_audit/bad/welcome/%'] = array(
     'title' => 'Welcome',
-    'page callback' => 'security_audit_welcome_callback',
-    'page arguments' => array(2),
+    'page callback' => 'security_audit_welcome_callback_bad',
+    'page arguments' => array(3),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
 
-  $items['security_audit/node/%'] = array(
+  $items['security_audit/good/welcome/%'] = array(
+    'title' => 'Welcome',
+    'page callback' => 'security_audit_welcome_callback_good',
+    'page arguments' => array(3),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['security_audit/bad/node/%'] = array(
     'title' => 'Display a node',
-    'page callback' => 'security_audit_node_callback',
-    'page arguments' => array(2),
+    'page callback' => 'security_audit_node_callback_bad',
+    'page arguments' => array(3),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
 
-  $items['security_audit/form'] = array(
+  $items['security_audit/bad/form'] = array(
     'title' => 'Display a form',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('security_audit_form'),
+    'page arguments' => array('security_audit_form_bad'),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
 
-  $items['security_audit/disable'] = array(
+  $items['security_audit/bad/disable'] = array(
     'title' => 'Unpublish any content',
     'access arguments' => array('edit any article content'),
-    'page callback' => 'security_audit_node_unpublish',
-    'page arguments' => array(2),
+    'page callback' => 'security_audit_node_unpublish_bad',
+    'page arguments' => array(3),
     'type' => MENU_CALLBACK,
   );
 
@@ -59,9 +61,21 @@ function security_audit_menu() {
  * @param $name
  * @return string
  */
-function security_audit_welcome_callback($name) {
+function security_audit_welcome_callback_bad($name) {
   // Security problem: user input is not being sanitised and passed directly to the browser.
-  $output = 'Hello '.$name;
+  $output = 'Hello ' . $name;
+
+  return $output;
+}
+
+/**
+ * Callback which displays simple hello message
+ * @param $name
+ * @return string
+ */
+function security_audit_welcome_callback_good($name) {
+  // use t() and pass variable via placeholder with @ prefix to check_plain.
+  $output = t('Hello @name', array('@name' => $name));
 
   return $output;
 }
@@ -69,7 +83,7 @@ function security_audit_welcome_callback($name) {
 /**
  * Callback which displays a node
  */
-function security_audit_node_callback($nid) {
+function security_audit_node_callback_bad($nid) {
   // View of node
 
   // Example if SQL Injection. User can pass in another SQL query to alter the query below.
@@ -85,7 +99,7 @@ function security_audit_node_callback($nid) {
  * Implements hook_form().
  *
  */
-function security_audit_form($form, &$form_state) {
+function security_audit_form_bad($form, &$form_state) {
 
   $form['title'] = array(
     '#type' => 'textfield',
@@ -108,7 +122,7 @@ function security_audit_form($form, &$form_state) {
  * @param $form
  * @param $form_state
  */
-function security_audit_form_submit($form, &$form_state) {
+function security_audit_form_bad_submit($form, &$form_state) {
   // $form_state['input'] is raw user submitted data that has not been sanitised. Use $form_state['values'] instead
   drupal_set_message('You have submitted data with the following title ' . $form_state['input']['title']);
 }
@@ -118,7 +132,7 @@ function security_audit_form_submit($form, &$form_state) {
  * @param $nid
  * @return null|string
  */
-function security_audit_node_unpublish($nid) {
+function security_audit_node_unpublish_bad($nid) {
   // This is a CSRF and SQL Injection vulnerability.
   // A user can add an image with src being the path to access this callback. Another user with the correct permissions could execute it.
   db_query("UPDATE {node} SET status = 0 WHERE nid = $nid");
