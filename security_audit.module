@@ -16,10 +16,18 @@ function security_audit_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_SUGGESTED_ITEM,
   );
-  $items['security_audit/%'] = array(
+  $items['security_audit/welcome/%'] = array(
     'title' => 'Welcome',
-    'page callback' => 'security_audit_callback',
-    'page arguments' => array(1),
+    'page callback' => 'security_audit_welcome_callback',
+    'page arguments' => array(2),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['security_audit/node/%'] = array(
+    'title' => 'Display a node',
+    'page callback' => 'security_audit_node_callback',
+    'page arguments' => array(2),
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
@@ -33,9 +41,22 @@ function security_audit_menu() {
  * @param $name
  * @return string
  */
-function security_audit_callback($name) {
+function security_audit_welcome_callback($name) {
   // Security problem: user input is not being sanitised and passed directly to the browser.
   $output = 'Hello '.$name;
 
   return $output;
+}
+
+/**
+ * Callback which displays a node
+ */
+function security_audit_node_callback($nid) {
+  // View of node
+
+  // Example if SQL Injection. User can pass in another SQL query to alter the query below.
+  $nid = $_GET['nid'];
+  $title = db_query("SELECT title FROM node where nid = $nid")->fetchField();
+
+  return $title;
 }
