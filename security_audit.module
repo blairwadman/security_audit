@@ -68,6 +68,14 @@ function security_audit_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['security_audit/good/disable'] = array(
+    'title' => 'Unpublish any content',
+    'access arguments' => array('edit any article content'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('security_audit_node_unpublish_good'),
+    'type' => MENU_CALLBACK,
+  );
+
   return $items;
   
 }
@@ -163,7 +171,7 @@ function security_audit_form_good($form, &$form_state) {
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => 'title',
-    '#required' => TRUE, '#weight' => -5
+    '#required' => TRUE,
   );
 
 
@@ -197,4 +205,41 @@ function security_audit_node_unpublish_bad($nid) {
   db_query("UPDATE {node} SET status = 0 WHERE nid = $nid");
   drupal_set_message('Unpublished node with nid: ' . $nid);
   return t('Node unpublished');
+}
+
+/**
+ * Form to unpublish a node.
+ * @param $nid
+ * @return null|string
+ */
+function security_audit_node_unpublish_good($form, &$form_state) {
+
+  $nodes = node_load_multiple(array(), array('type' => 'article'));
+
+  $options = array();
+  foreach($nodes as $node) {
+    $options[$node->nid] = $node->title;
+  }
+
+  $form['node'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+    '#title' => 'Node to unpublish',
+    '#required' => TRUE,
+  );
+
+  $form['buttons']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+  );
+
+  return $form;
+}
+
+/*
+ * Submit handler for security_audit_node_unpublish_good.
+ */
+function security_audit_node_unpublish_good_submit($form, &$form_state) {
+  db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $form_state['values']['node']));
+  drupal_set_message(t('Node unpublished'));
 }
