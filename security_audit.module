@@ -36,6 +36,14 @@ function security_audit_menu() {
     'type' => MENU_CALLBACK,
   );
 
+  $items['security_audit/good/node/%'] = array(
+    'title' => 'Display a node',
+    'page callback' => 'security_audit_node_callback_good',
+    'page arguments' => array(3),
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
   $items['security_audit/bad/form'] = array(
     'title' => 'Display a form',
     'page callback' => 'drupal_get_form',
@@ -84,11 +92,22 @@ function security_audit_welcome_callback_good($name) {
  * Callback which displays a node
  */
 function security_audit_node_callback_bad($nid) {
-  // View of node
 
   // Example if SQL Injection. User can pass in another SQL query to alter the query below.
   $nid = $_GET['nid'];
   $title = db_query("SELECT title FROM node where nid = $nid")->fetchField();
+
+  return $title;
+}
+
+/**
+ * Callback which displays a node
+ */
+function security_audit_node_callback_good($nid) {
+
+  // Pass variable to query via placeholder to prevent SQL Injection.
+  $nid = $_GET['nid'];
+  $title = db_query("SELECT title FROM node where nid = :nid", array(':nid' => $nid))->fetchField();
 
   return $title;
 }
