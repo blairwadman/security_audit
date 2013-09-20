@@ -120,8 +120,7 @@ function security_audit_welcome_callback_good($name) {
  * Callback which displays a node
  */
 function security_audit_node_callback_bad($nid) {
-
-  // Example if SQL Injection. User can pass in another SQL query to alter the query below.
+  // Example of SQL Injection. User can pass in another SQL query to alter the query below.
   $nid = $_GET['nid'];
   $title = db_query("SELECT title FROM node where nid = $nid")->fetchField();
 
@@ -132,7 +131,6 @@ function security_audit_node_callback_bad($nid) {
  * Callback which displays a node
  */
 function security_audit_node_callback_good($nid) {
-
   // Pass variable to query via placeholder to prevent SQL Injection.
   $nid = $_GET['nid'];
   $title = db_query("SELECT title FROM node where nid = :nid", array(':nid' => $nid))->fetchField();
@@ -225,7 +223,7 @@ function security_audit_node_unpublish_bad($nid) {
  * @return null|string
  */
 function security_audit_node_unpublish_good($form, &$form_state) {
-
+  // Fixes CSRF vulnerability by ensuring data can only be changed in the database as a result of a form submit and not a URL.
   $nodes = node_load_multiple(array(), array('type' => 'article'));
 
   $options = array();
@@ -252,6 +250,7 @@ function security_audit_node_unpublish_good($form, &$form_state) {
  * Submit handler for security_audit_node_unpublish_good.
  */
 function security_audit_node_unpublish_good_submit($form, &$form_state) {
+  // Fixes SQL Injection vulnerability by ensuring the variable is passed through a placeholder.
   db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $form_state['values']['node']));
   drupal_set_message(t('Node unpublished'));
 }
@@ -260,6 +259,7 @@ function security_audit_node_unpublish_good_submit($form, &$form_state) {
  * Callback to display nodes list.
  */
 function security_audit_node_list_bad() {
+  // Node access vulnerability. Nothing ensures nodes are published or that user has permissions to view each node.
   $query = db_select('node', 'n');
   $query->fields('n', array('nid', 'title'));
   $result = $query->execute();
@@ -279,6 +279,7 @@ function security_audit_node_list_bad() {
  * Callback to display nodes list.
  */
 function security_audit_node_list_good() {
+  // Ensure nodes are published and that node access permissions are checked.
   $query = db_select('node', 'n');
   $query->fields('n', array('nid', 'title'));
   $query->condition('n.status', 1);
@@ -293,5 +294,4 @@ function security_audit_node_list_good() {
   $output = theme('item_list', array('items' => $item_link));
 
   return $output;
-
 }
