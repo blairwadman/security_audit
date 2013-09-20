@@ -9,7 +9,6 @@
 
 /**
  * Implements hook_menu().
- *
  */
 function security_audit_menu() {
   $items['security_audit/bad/welcome/%'] = array(
@@ -89,16 +88,14 @@ function security_audit_menu() {
   );
 
   return $items;
-  
 }
 
 /**
  * Callback which displays simple hello message
- * @param $name
- * @return string
  */
 function security_audit_welcome_callback_bad($name) {
-  // Security problem: user input is not being sanitised and passed directly to the browser.
+  /* Security problem: user input is not being sanitised and
+     passed directly to the browser. */
   $output = 'Hello ' . $name;
 
   return $output;
@@ -106,11 +103,9 @@ function security_audit_welcome_callback_bad($name) {
 
 /**
  * Callback which displays simple hello message
- * @param $name
- * @return string
  */
 function security_audit_welcome_callback_good($name) {
-  // use t() and pass variable via placeholder with @ prefix to check_plain.
+  // Use t() and pass variable via placeholder with @ prefix to check_plain.
   $output = t('Hello @name', array('@name' => $name));
 
   return $output;
@@ -120,7 +115,8 @@ function security_audit_welcome_callback_good($name) {
  * Callback which displays a node
  */
 function security_audit_node_callback_bad($nid) {
-  // Example of SQL Injection. User can pass in another SQL query to alter the query below.
+  /* Example of SQL Injection. User can pass in another SQL
+     query to alter the query below. */
   $nid = $_GET['nid'];
   $title = db_query("SELECT title FROM node where nid = $nid")->fetchField();
 
@@ -138,18 +134,15 @@ function security_audit_node_callback_good($nid) {
   return $title;
 }
 
-
-
 /**
  * Implements hook_form().
- *
  */
 function security_audit_form_bad($form, &$form_state) {
 
   $form['title'] = array(
     '#type' => 'textfield',
     '#title' => 'title',
-    '#required' => TRUE, '#weight' => -5
+    '#required' => TRUE, '#weight' => -5,
   );
 
 
@@ -164,17 +157,15 @@ function security_audit_form_bad($form, &$form_state) {
 
 /**
  * Submit handler for security_audit_form.
- * @param $form
- * @param $form_state
  */
 function security_audit_form_bad_submit($form, &$form_state) {
-  // $form_state['input'] is raw user submitted data that has not been sanitised. Use $form_state['values'] instead
+  /* $form_state['input'] is raw user submitted data that has not
+     been sanitised. Use $form_state['values'] instead. */
   drupal_set_message('You have submitted data with the following title ' . $form_state['input']['title']);
 }
 
 /**
  * Implements hook_form().
- *
  */
 function security_audit_form_good($form, &$form_state) {
 
@@ -196,8 +187,6 @@ function security_audit_form_good($form, &$form_state) {
 
 /**
  * Submit handler for security_audit_form.
- * @param $form
- * @param $form_state
  */
 function security_audit_form_good_submit($form, &$form_state) {
   // Uses $form_state['values']
@@ -206,12 +195,11 @@ function security_audit_form_good_submit($form, &$form_state) {
 
 /**
  * Callback to unpublish a node.
- * @param $nid
- * @return null|string
  */
 function security_audit_node_unpublish_bad($nid) {
-  // This is a CSRF and SQL Injection vulnerability.
-  // A user can add an image with src being the path to access this callback. Another user with the correct permissions could execute it.
+  /* This is a CSRF and SQL Injection vulnerability.
+     A user can add an image with src being the path to access this callback.
+     Another user with the correct permissions could execute it. */
   db_query("UPDATE {node} SET status = 0 WHERE nid = $nid");
   drupal_set_message('Unpublished node with nid: ' . $nid);
   return t('Node unpublished');
@@ -219,15 +207,14 @@ function security_audit_node_unpublish_bad($nid) {
 
 /**
  * Form to unpublish a node.
- * @param $nid
- * @return null|string
  */
 function security_audit_node_unpublish_good($form, &$form_state) {
-  // Fixes CSRF vulnerability by ensuring data can only be changed in the database as a result of a form submit and not a URL.
+  /* Fixes CSRF vulnerability by ensuring data can only be changed in the
+     database as a result of a form submit and not a URL.*/
   $nodes = node_load_multiple(array(), array('type' => 'article'));
 
   $options = array();
-  foreach($nodes as $node) {
+  foreach ($nodes as $node) {
     $options[$node->nid] = $node->title;
   }
 
@@ -246,11 +233,12 @@ function security_audit_node_unpublish_good($form, &$form_state) {
   return $form;
 }
 
-/*
+/**
  * Submit handler for security_audit_node_unpublish_good.
  */
 function security_audit_node_unpublish_good_submit($form, &$form_state) {
-  // Fixes SQL Injection vulnerability by ensuring the variable is passed through a placeholder.
+  /* Fixes SQL Injection vulnerability by ensuring the variable is
+     passed through a placeholder. */
   db_query("UPDATE {node} SET status = 0 WHERE nid = :nid", array(':nid' => $form_state['values']['node']));
   drupal_set_message(t('Node unpublished'));
 }
@@ -259,7 +247,8 @@ function security_audit_node_unpublish_good_submit($form, &$form_state) {
  * Callback to display nodes list.
  */
 function security_audit_node_list_bad() {
-  // Node access vulnerability. Nothing ensures nodes are published or that user has permissions to view each node.
+  /* Node access vulnerability. Nothing ensures nodes are published or
+  that user has permissions to view each node. */
   $query = db_select('node', 'n');
   $query->fields('n', array('nid', 'title'));
   $result = $query->execute();
